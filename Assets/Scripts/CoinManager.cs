@@ -1,34 +1,28 @@
 using UnityEngine;
+using System;
 
 public class CoinManager : MonoBehaviour
 {
     public static CoinManager Instance { get; private set; }
+
+    public event Action<int> OnCoinsChanged;
+
     private int coins;
-    private int maxCoins = 100;
-    public GameObject coinPrefab;
-    
-    private void Awake()
+    [SerializeField] private int maxCoins = 100;
+
+    void Awake()
     {
-        if (Instance) Destroy(Instance.gameObject);
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+        // Opcional: DontDestroyOnLoad(gameObject);
     }
 
-    private void Start()
-    {
-        for (int x = 0; x < 5; x++)
-        {
-            for (int y = 0; y < 5; y++)
-            {
-                var instance = Instantiate(coinPrefab);
-                instance.transform.position = new Vector3(x, 2f, y);
-            }
-        }
-    }
-
-    // Update is called once per frame
     public void AddCoins(int amount)
     {
-        coins = Mathf.Min(maxCoins, coins + amount);
+        coins = Mathf.Clamp(coins + amount, 0, maxCoins);
         Debug.Log($"Total Coins: {coins}");
+        OnCoinsChanged?.Invoke(coins); // 🔔 avisa a la UI
     }
+
+    public int GetCoins() => coins;
 }
